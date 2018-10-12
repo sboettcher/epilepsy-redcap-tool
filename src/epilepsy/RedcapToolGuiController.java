@@ -8,6 +8,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
@@ -50,8 +52,10 @@ public class RedcapToolGuiController {
     } );
 
     alert.getDialogPane().contentProperty().set( vb );
-
     alert.setContentText(String.format("RADAR-CNS\n\nJava: %s\nJavaFX: %s\nradar-cns.org\nradar-base.org", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion()));
+
+    alert.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("res/radarcns-logo.png"), 150, 100, true, true)));
+
     alert.showAndWait();
   }
 
