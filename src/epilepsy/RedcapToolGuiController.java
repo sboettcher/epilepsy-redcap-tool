@@ -28,6 +28,11 @@ public class RedcapToolGuiController {
 
 
   /* Button Handler */
+  @FXML public void handleLoadDictAction(ActionEvent event) {
+  }
+
+  @FXML public void handleLoadDataAction(ActionEvent event) {
+  }
 
   @FXML void handleExitAction(ActionEvent event) {
     Platform.exit();

@@ -38,7 +38,7 @@ public class RedcapToolMain extends Application {
 
     primaryStage.setTitle("Epilepsy REDCap Tool");
     primaryStage.setScene(new Scene(tool_ui_root, 1280, 720));
-    primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("res/radarcns-logo-small.png")));
+    primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("res/radarcns-logo-small-bg.png")));
     primaryStage.show();
   }
 
