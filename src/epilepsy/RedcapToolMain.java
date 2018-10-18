@@ -50,7 +50,6 @@ public class RedcapToolMain extends Application {
 
 
   public static void main(String[] args) {
-    DictionaryLoader.readFromResource("/DICT.csv");
     launch(args);
   }
 }

@@ -1,18 +1,25 @@
 package epilepsy;
 
+import epilepsy.redcap.DictionaryEntry;
+import epilepsy.redcap.DictionaryLoader;
 import epilepsy.util.ExceptionAlert;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import sun.reflect.generics.tree.Tree;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import static epilepsy.util.Statics.loglvl;
@@ -21,18 +28,47 @@ public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
   static {LOGGER.setLevel(loglvl);}
 
-  private HostServices mHostServices;
+  @FXML private HBox statusHBox;
+  @FXML private TreeView dictionaryTree;
+  @FXML private TreeTableView dataTreeTable;
+
+  private ArrayList<DictionaryEntry> ddEntries;
+
 
   public RedcapToolGuiController() {
+    ddEntries = new ArrayList<>();
   }
 
   @FXML public void initialize() {
+    ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
+    setDictionary(ddEntries);
     LOGGER.info("Tool GUI initialized");
   }
 
 
+  /* Dictionary Handler */
+
+  private void setDictionary(ArrayList<DictionaryEntry> entries) {
+    dictionaryTree.setRoot(null);
+    if (entries == null || entries.size() < 1) return;
+    // TODO: set dictionary view
+  }
+
+
+
   /* Button Handler */
   @FXML public void handleLoadDictAction(ActionEvent event) {
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.setTitle("Open Data Dictionary File");
+    File dictfile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
+    try {
+      ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromFile(dictfile);
+    } catch (FileNotFoundException ex) {
+      ex.printStackTrace();
+      Alert alert = new ExceptionAlert(ex);
+      alert.setContentText("Exception while trying to open a dictionary file at\n" + dictfile.getPath());
+      alert.showAndWait();
+    }
   }
 
   @FXML public void handleLoadDataAction(ActionEvent event) {
