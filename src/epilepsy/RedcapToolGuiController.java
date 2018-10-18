@@ -20,13 +20,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
+import static epilepsy.util.Statics.buildtime;
+import static epilepsy.util.Statics.buildversion;
 import static epilepsy.util.Statics.loglvl;
 
 public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
   static {LOGGER.setLevel(loglvl);}
+
+  @FXML private Label leftStatus;
+  @FXML private Label rightStatus;
 
   @FXML private HBox statusHBox;
   @FXML private TreeView dictionaryTree;
@@ -40,8 +46,11 @@ public class RedcapToolGuiController {
   }
 
   @FXML public void initialize() {
+    rightStatus.setText(String.format("Build: %s@%s", buildversion, buildtime));
+
     ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
     setDictionary(ddEntries);
+
     LOGGER.info("Tool GUI initialized");
   }
 
@@ -49,9 +58,35 @@ public class RedcapToolGuiController {
   /* Dictionary Handler */
 
   private void setDictionary(ArrayList<DictionaryEntry> entries) {
-    dictionaryTree.setRoot(null);
+    TreeItem<String> rootItem = new TreeItem<>("Data Dictionary");
+    rootItem.setExpanded(true);
+    dictionaryTree.setRoot(rootItem);
+
     if (entries == null || entries.size() < 1) return;
     // TODO: set dictionary view
+
+    HashMap<String, ArrayList<DictionaryEntry>> instruments = new HashMap<>();
+    for (DictionaryEntry de : entries) {
+      if (!instruments.containsKey(de.getFormName())) {
+        instruments.put(de.getFormName(), new ArrayList<>());
+      }
+      instruments.get(de.getFormName()).add(de);
+    }
+
+    for (String instrument : instruments.keySet()) {
+      TreeItem<String> instrumentRoot = new TreeItem<>(instrument);
+      int instrumentIndex = rootItem.getChildren().indexOf(instrumentRoot);
+      if (instrumentIndex >= 0) {
+        instrumentRoot = rootItem.getChildren().get(instrumentIndex);
+      }
+
+      instrumentRoot.getChildren().clear();
+      for (DictionaryEntry de : instruments.get(instrument)) {
+        instrumentRoot.getChildren().add(new TreeItem<>(de.getFieldName()));
+      }
+
+      rootItem.getChildren().add(instrumentRoot);
+    }
   }
 
 
@@ -63,6 +98,7 @@ public class RedcapToolGuiController {
     File dictfile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
     try {
       ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromFile(dictfile);
+      setDictionary(ddEntries);
     } catch (FileNotFoundException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
