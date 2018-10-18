@@ -15,8 +15,12 @@ import javafx.scene.layout.VBox;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import static epilepsy.util.Statics.loglvl;
+
 public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
+  static {LOGGER.setLevel(loglvl);}
+
   private HostServices mHostServices;
 
   public RedcapToolGuiController() {
@@ -59,7 +63,7 @@ public class RedcapToolGuiController {
     alert.getDialogPane().contentProperty().set( vb );
     alert.setContentText(String.format("RADAR-CNS\n\nJava: %s\nJavaFX: %s\nradar-cns.org\nradar-base.org", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion()));
 
-    alert.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("res/radarcns-logo.png"), 150, 100, true, true)));
+    alert.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/radarcns-logo.png"), 150, 100, true, true)));
 
     alert.showAndWait();
   }
