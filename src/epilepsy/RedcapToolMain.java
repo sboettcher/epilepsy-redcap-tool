@@ -1,6 +1,5 @@
 package epilepsy;
 
-import epilepsy.redcap.DictionaryLoader;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -43,7 +42,8 @@ public class RedcapToolMain extends Application {
     mUIController = tool_ui_loader.getController();
 
     primaryStage.setTitle("Epilepsy REDCap Tool");
-    primaryStage.setScene(new Scene(tool_ui_root, 1280, 720));
+    primaryStage.setMaximized(true);
+    primaryStage.setScene(new Scene(tool_ui_root, 1920, 1080));
     primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/radarcns-logo-small-bg.png")));
     primaryStage.show();
   }

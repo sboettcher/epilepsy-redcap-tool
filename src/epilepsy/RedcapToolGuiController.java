@@ -1,10 +1,11 @@
 package epilepsy;
 
+import epilepsy.redcap.DataLoader;
 import epilepsy.redcap.DictionaryEntry;
 import epilepsy.redcap.DictionaryLoader;
 import epilepsy.util.ExceptionAlert;
-import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -13,19 +14,17 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import sun.reflect.generics.tree.Tree;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import static epilepsy.util.Statics.buildtime;
-import static epilepsy.util.Statics.buildversion;
-import static epilepsy.util.Statics.loglvl;
+import static epilepsy.util.Statics.*;
 
 public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
@@ -36,20 +35,49 @@ public class RedcapToolGuiController {
 
   @FXML private HBox statusHBox;
   @FXML private TreeView dictionaryTree;
-  @FXML private TreeTableView dataTreeTable;
+  @FXML private TreeTableView<Map<String, String>> dataTreeTable;
 
   private ArrayList<DictionaryEntry> ddEntries;
+  private ArrayList<HashMap<String, String>> dataEntries;
+
+  private static ArrayList<String> defaultDataColumns;
+  static {
+    defaultDataColumns = new ArrayList<>();
+    //defaultDataColumns.add("record_id");
+    defaultDataColumns.add("patient_code");
+    defaultDataColumns.add("start_date");
+    defaultDataColumns.add("recording_end_date");
+    defaultDataColumns.add("epi_type");
+    defaultDataColumns.add("seizure_recorded");
+    defaultDataColumns.add("rep_seizure_type");
+  }
 
 
   public RedcapToolGuiController() {
     ddEntries = new ArrayList<>();
+    dataEntries = new ArrayList<>();
   }
 
   @FXML public void initialize() {
-    rightStatus.setText(String.format("Build: %s@%s", buildversion, buildtime));
+    leftStatus.setText("");
+    rightStatus.setText("");
 
-    ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
-    setDictionary(ddEntries);
+    try {
+      ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
+      setDictionary(ddEntries);
+    } catch (NullPointerException ex) {
+      LOGGER.warning("Error loading dictionary from resource file during initialization.");
+    }
+
+    try {
+      dataEntries = DataLoader.readFromResource("/DATA.csv");
+      setData(ddEntries, dataEntries);
+    } catch (IOException | NullPointerException ex) {
+      LOGGER.warning("Error loading data from resource file during initialization.");
+    }
+
+    leftStatus.setText(String.format("Dictionary Size: %d", ddEntries.size()));
+    leftStatus.setText(String.format("Data Size: %d", dataEntries.size()));
 
     LOGGER.info("Tool GUI initialized");
   }
@@ -58,22 +86,26 @@ public class RedcapToolGuiController {
   /* Dictionary Handler */
 
   private void setDictionary(ArrayList<DictionaryEntry> entries) {
+    // single toplevel root item
     TreeItem<String> rootItem = new TreeItem<>("Data Dictionary");
     rootItem.setExpanded(true);
     dictionaryTree.setRoot(rootItem);
 
     if (entries == null || entries.size() < 1) return;
-    // TODO: set dictionary view
 
+    // sort dictionary entries into instruments map
+    ArrayList<String> instrumentOrder = new ArrayList<>();
     HashMap<String, ArrayList<DictionaryEntry>> instruments = new HashMap<>();
     for (DictionaryEntry de : entries) {
       if (!instruments.containsKey(de.getFormName())) {
         instruments.put(de.getFormName(), new ArrayList<>());
+        instrumentOrder.add(de.getFormName());
       }
       instruments.get(de.getFormName()).add(de);
     }
 
-    for (String instrument : instruments.keySet()) {
+    // create instrument nodes and add children
+    for (String instrument : instrumentOrder) {
       TreeItem<String> instrumentRoot = new TreeItem<>(instrument);
       int instrumentIndex = rootItem.getChildren().indexOf(instrumentRoot);
       if (instrumentIndex >= 0) {
@@ -87,6 +119,47 @@ public class RedcapToolGuiController {
 
       rootItem.getChildren().add(instrumentRoot);
     }
+
+    rightStatus.setText(String.format("Dictionary Size: %d", entries.size()));
+  }
+
+
+  /* Data Handler */
+
+  private void setData(ArrayList<DictionaryEntry> dictionary, ArrayList<HashMap<String, String>> data) {
+    // create single toplevel root item
+    final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "PATIENTS"));
+    root.setExpanded(true);
+    dataTreeTable.setRoot(root);
+
+    // add patient entries to root
+    for (HashMap<String, String> recordMap : data) {
+      if (!recordMap.get("patient_code").equals("")) {
+        root.getChildren().add(new TreeItem<>(recordMap));
+      }
+      // add seizure entries to patients TODO: currently assumes seizure entries for a specific patient are immediately preceded by the patient entry (p1,p1s1,p1s2,p1s3,p2,p2s1,p3,p4,p4s1,p4s2,...)
+      else if (recordMap.get("redcap_repeat_instrument").equals("seizures")) {
+        root.getChildren().get(root.getChildren().size()-1).getChildren().add(new TreeItem<>(recordMap));
+      }
+    }
+
+    // create columns
+    ArrayList<TreeTableColumn<Map<String, String>, String>> columns = new ArrayList<>();
+    for (DictionaryEntry dictionaryColumn : dictionary) {
+      TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel());
+      nextColumn.setCellValueFactory(
+          (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
+      );
+      if (!defaultDataColumns.contains(dictionaryColumn.getFieldName()))
+        nextColumn.setVisible(false);
+      columns.add(nextColumn);
+    }
+
+    dataTreeTable.getColumns().setAll(columns);
+    dataTreeTable.setShowRoot(false);
+    dataTreeTable.setTableMenuButtonVisible(true);
+
+    leftStatus.setText(String.format("Data Size: %d", data.size()));
   }
 
 
@@ -108,6 +181,18 @@ public class RedcapToolGuiController {
   }
 
   @FXML public void handleLoadDataAction(ActionEvent event) {
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.setTitle("Open REDCap Data File");
+    File datafile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
+    try {
+      dataEntries = DataLoader.readFromFile(datafile);
+      setDictionary(ddEntries);
+    } catch (IOException ex) {
+      ex.printStackTrace();
+      Alert alert = new ExceptionAlert(ex);
+      alert.setContentText("Exception while trying to open a data file at\n" + datafile.getPath());
+      alert.showAndWait();
+    }
   }
 
   @FXML void handleExitAction(ActionEvent event) {
@@ -120,7 +205,7 @@ public class RedcapToolGuiController {
     alert.setHeaderText("Epilepsy REDCap Tool");
 
     VBox vb = new VBox();
-    Label lbl = new Label(String.format("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\nJava: %s\nJavaFX: %s", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion()));
+    Label lbl = new Label(String.format("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\nJava: %s\nJavaFX: %s\n\nLog Level: %s\nBuild: %s@%s", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion(), loglvl, buildversion, buildtime));
     Hyperlink link1 = new Hyperlink("https://radar-cns.org");
     Hyperlink link2 = new Hyperlink("https://radar-base.org");
     vb.getChildren().addAll( link1, link2, lbl );

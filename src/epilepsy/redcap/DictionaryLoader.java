@@ -24,7 +24,7 @@ public class DictionaryLoader {
     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
     return readDictionary(br);
   }
-  public static List<DictionaryEntry> readFromResource(String res) {
+  public static List<DictionaryEntry> readFromResource(String res) throws NullPointerException {
     LOGGER.fine("Reading data dictionary from resource " + res);
     BufferedReader br = new BufferedReader(new InputStreamReader(DictionaryLoader.class.getResourceAsStream(res)));
     return readDictionary(br);
