@@ -58,6 +58,32 @@ public class DictionaryEntry {
   private String fieldAnnotation;
 
 
+  /*
+   * Constructor
+   */
+
+  public DictionaryEntry() {}
+  public DictionaryEntry(String field, String form, String type) {
+    fieldName = field;
+    formName = form;
+    sectionHeader = "";
+    fieldType = type;
+    fieldLabel = "";
+    choicesCalcsSlider = "";
+    fieldNote = "";
+    textValidationType = "";
+    textValidationMin = "";
+    textValidationMax = "";
+    identifier = "";
+    branchingLogic = "";
+    fieldRequired = "";
+    customAlignment = "";
+    questionNumber = "";
+    matrixGroupName = "";
+    matrixRanking = "";
+    fieldAnnotation = "";
+  }
+
 
   /*
    * Getter/Setter, generated

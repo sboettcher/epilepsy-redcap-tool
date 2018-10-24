@@ -40,7 +40,9 @@ public class RedcapToolGuiController {
   private ArrayList<DictionaryEntry> ddEntries;
   private ArrayList<HashMap<String, String>> dataEntries;
 
-  private static ArrayList<String> defaultDataColumns;
+  private boolean currentAllExpanded = false;
+  private static final String defaultSortColumn = "patient_code";
+  private static final ArrayList<String> defaultDataColumns;
   static {
     defaultDataColumns = new ArrayList<>();
     //defaultDataColumns.add("record_id");
@@ -131,6 +133,9 @@ public class RedcapToolGuiController {
     final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "PATIENTS"));
     root.setExpanded(true);
     dataTreeTable.setRoot(root);
+    dataTreeTable.setShowRoot(false);
+    dataTreeTable.setTableMenuButtonVisible(true);
+    dataTreeTable.setSortMode(TreeSortMode.ONLY_FIRST_LEVEL);
 
     // add patient entries to root
     for (HashMap<String, String> recordMap : data) {
@@ -139,25 +144,29 @@ public class RedcapToolGuiController {
       }
       // add seizure entries to patients TODO: currently assumes seizure entries for a specific patient are immediately preceded by the patient entry (p1,p1s1,p1s2,p1s3,p2,p2s1,p3,p4,p4s1,p4s2,...)
       else if (recordMap.get("redcap_repeat_instrument").equals("seizures")) {
-        root.getChildren().get(root.getChildren().size()-1).getChildren().add(new TreeItem<>(recordMap));
+        TreeItem<Map<String, String>> seizureItem = new TreeItem<>(recordMap);
+        root.getChildren().get(root.getChildren().size()-1).getChildren().add(seizureItem);
       }
     }
 
     // create columns
     ArrayList<TreeTableColumn<Map<String, String>, String>> columns = new ArrayList<>();
     for (DictionaryEntry dictionaryColumn : dictionary) {
-      TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel());
+      TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel().equals("") ? dictionaryColumn.getFieldName() : dictionaryColumn.getFieldLabel());
       nextColumn.setCellValueFactory(
           (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
       );
       if (!defaultDataColumns.contains(dictionaryColumn.getFieldName()))
         nextColumn.setVisible(false);
+      if (dictionaryColumn.getFieldName().equals(defaultSortColumn)) {
+        nextColumn.setSortType(TreeTableColumn.SortType.ASCENDING);
+        dataTreeTable.getSortOrder().add(nextColumn);
+      }
       columns.add(nextColumn);
     }
 
     dataTreeTable.getColumns().setAll(columns);
-    dataTreeTable.setShowRoot(false);
-    dataTreeTable.setTableMenuButtonVisible(true);
+    dataTreeTable.sort();
 
     leftStatus.setText(String.format("Data Size: %d", data.size()));
   }
@@ -165,6 +174,18 @@ public class RedcapToolGuiController {
 
 
   /* Button Handler */
+
+  @FXML void handleExpandAllAction(ActionEvent event) {
+    currentAllExpanded = !currentAllExpanded;
+    for (TreeItem<Map<String, String>> row : dataTreeTable.getRoot().getChildren()) {
+      row.setExpanded(currentAllExpanded);
+    }
+  }
+
+
+
+  /* Menu Handler */
+
   @FXML public void handleLoadDictAction(ActionEvent event) {
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open Data Dictionary File");
