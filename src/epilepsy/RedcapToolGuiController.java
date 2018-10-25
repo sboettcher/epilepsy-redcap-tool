@@ -131,6 +131,11 @@ public class RedcapToolGuiController {
   /* Data Handler */
 
   private void setData(ArrayList<DictionaryEntry> dictionary, ArrayList<HashMap<String, String>> data) {
+    if (dictionary.isEmpty() || data.isEmpty()) {
+      LOGGER.warning("Empty dictionary or data.");
+      return;
+    }
+
     // create single toplevel root item
     final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "ROOT"));
     root.setExpanded(true);
@@ -245,7 +250,7 @@ public class RedcapToolGuiController {
     File datafile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
     try {
       dataEntries = DataLoader.readFromFile(datafile);
-      setDictionary(ddEntries);
+      setData(ddEntries, dataEntries);
     } catch (IOException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
