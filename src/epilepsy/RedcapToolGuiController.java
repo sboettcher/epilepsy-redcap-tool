@@ -6,6 +6,7 @@ import epilepsy.redcap.DictionaryLoader;
 import epilepsy.util.ExceptionAlert;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -14,6 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.Callback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,9 +51,9 @@ public class RedcapToolGuiController {
     defaultDataColumns.add("patient_code");
     defaultDataColumns.add("start_date");
     defaultDataColumns.add("recording_end_date");
-    defaultDataColumns.add("epi_type");
     defaultDataColumns.add("seizure_recorded");
     defaultDataColumns.add("rep_seizure_type");
+    defaultDataColumns.add("rep_seizure_num");
   }
 
 
@@ -130,7 +132,7 @@ public class RedcapToolGuiController {
 
   private void setData(ArrayList<DictionaryEntry> dictionary, ArrayList<HashMap<String, String>> data) {
     // create single toplevel root item
-    final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "PATIENTS"));
+    final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "ROOT"));
     root.setExpanded(true);
     dataTreeTable.setRoot(root);
     dataTreeTable.setShowRoot(false);
@@ -153,9 +155,45 @@ public class RedcapToolGuiController {
     ArrayList<TreeTableColumn<Map<String, String>, String>> columns = new ArrayList<>();
     for (DictionaryEntry dictionaryColumn : dictionary) {
       TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel().equals("") ? dictionaryColumn.getFieldName() : dictionaryColumn.getFieldLabel());
-      nextColumn.setCellValueFactory(
-          (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
-      );
+      if (dictionaryColumn.getFieldType().equals("checkbox")) {
+        nextColumn.setCellValueFactory(cellData -> {
+          // get checked choice indices and collect labels
+          ArrayList<String> checkedLabels = new ArrayList<>();
+          for (int index : dictionaryColumn.getChoices().keySet()) {
+            String cellValue = cellData.getValue().getValue().get(String.format("%s___%d", dictionaryColumn.getFieldName(), index));
+            if (cellValue != null && !cellValue.equals("") && !cellValue.equals("0"))
+              checkedLabels.add(dictionaryColumn.getChoices().get(index));
+          }
+
+          // create string to display
+          String cellContent = String.join(" | ", checkedLabels);
+
+          if (cellContent.equals(""))
+            return new ReadOnlyStringWrapper("");
+          else
+            return new ReadOnlyStringWrapper(cellContent);
+        });
+      } else if (dictionaryColumn.getFieldType().equals("radio")) {
+        nextColumn.setCellValueFactory(cellData -> {
+          String fieldValue = cellData.getValue().getValue().get(dictionaryColumn.getFieldName());
+          if (fieldValue == null || fieldValue.equals(""))
+            return new ReadOnlyStringWrapper("");
+          else
+            return new ReadOnlyStringWrapper(dictionaryColumn.getChoices().get(Integer.parseInt(fieldValue)));
+        });
+      } else if (dictionaryColumn.getFieldType().equals("yesno")) {
+        nextColumn.setCellValueFactory(cellData -> {
+          String fieldValue = cellData.getValue().getValue().get(dictionaryColumn.getFieldName());
+          if (fieldValue == null || fieldValue.equals(""))
+            return new ReadOnlyStringWrapper("");
+          else
+            return new ReadOnlyStringWrapper(fieldValue.equals("0") ? "no" : "yes");
+        });
+      } else {
+        nextColumn.setCellValueFactory(
+            (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
+        );
+      }
       if (!defaultDataColumns.contains(dictionaryColumn.getFieldName()))
         nextColumn.setVisible(false);
       if (dictionaryColumn.getFieldName().equals(defaultSortColumn)) {

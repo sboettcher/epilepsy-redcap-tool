@@ -2,6 +2,8 @@ package epilepsy.redcap;
 
 import com.opencsv.bean.CsvBindByName;
 
+import java.util.HashMap;
+
 public class DictionaryEntry {
   @CsvBindByName(column = "Variable / Field Name", required = true)
   private String fieldName;
@@ -58,6 +60,9 @@ public class DictionaryEntry {
   private String fieldAnnotation;
 
 
+  private HashMap<Integer, String> choices;
+
+
   /*
    * Constructor
    */
@@ -82,6 +87,24 @@ public class DictionaryEntry {
     matrixGroupName = "";
     matrixRanking = "";
     fieldAnnotation = "";
+  }
+
+
+  /*
+   * Handling Choices
+   */
+
+  public boolean processChoices() {
+    if ((fieldType.equals("radio") || fieldType.equals("checkbox")) && !choicesCalcsSlider.equals("")) {
+      choices = new HashMap<>();
+      for (String choiceRaw : choicesCalcsSlider.split("\\|")) {
+        int index =  Integer.parseInt(choiceRaw.trim().split(",", 2)[0]);
+        String choice =  choiceRaw.trim().split(",", 2)[1].trim();
+        choices.put(index, choice);
+      }
+      return true;
+    }
+    return false;
   }
 
 
@@ -231,5 +254,9 @@ public class DictionaryEntry {
 
   public void setFieldAnnotation(String fieldAnnotation) {
     this.fieldAnnotation = fieldAnnotation;
+  }
+
+  public HashMap<Integer, String> getChoices() {
+    return choices;
   }
 }

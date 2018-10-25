@@ -17,6 +17,8 @@ public class DictionaryLoader {
     List<DictionaryEntry> entries = new CsvToBeanBuilder(reader).withType(DictionaryEntry.class).build().parse();
     entries.add(1, new DictionaryEntry("redcap_repeat_instrument", "study_information", "text"));
     entries.add(2, new DictionaryEntry("redcap_repeat_instance", "study_information", "text"));
+    for (DictionaryEntry entry : entries)
+      entry.processChoices();
     LOGGER.fine(String.format("Read %d entries", entries.size()));
     return entries;
   }
