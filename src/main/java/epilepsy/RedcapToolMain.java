@@ -37,7 +37,7 @@ public class RedcapToolMain extends Application {
 
   @Override
   public void start(Stage primaryStage) throws Exception {
-    FXMLLoader tool_ui_loader = new FXMLLoader(getClass().getResource("redcap_tool_gui.fxml"));
+    FXMLLoader tool_ui_loader = new FXMLLoader(getClass().getResource("/redcap_tool_gui.fxml"));
     Parent tool_ui_root = tool_ui_loader.load();
     mUIController = tool_ui_loader.getController();
 

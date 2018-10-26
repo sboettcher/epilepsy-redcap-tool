@@ -66,6 +66,8 @@ public class RedcapToolGuiController {
     leftStatus.setText("");
     rightStatus.setText("");
 
+    dataTreeTable.setPlaceholder(new Label("No data loaded.\n\nTo begin:\n1. Load a Data Dictionary if the default is out-of-date.\n2. Load data from an exported CSV file.\n3. Select columns in the top right (\"+\")."));
+
     try {
       ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
       setDictionary(ddEntries);
@@ -149,7 +151,8 @@ public class RedcapToolGuiController {
       if (!recordMap.get("patient_code").equals("")) {
         root.getChildren().add(new TreeItem<>(recordMap));
       }
-      // add seizure entries to patients TODO: currently assumes seizure entries for a specific patient are immediately preceded by the patient entry (p1,p1s1,p1s2,p1s3,p2,p2s1,p3,p4,p4s1,p4s2,...)
+      // add seizure entries to patients
+      // TODO: currently assumes seizure entries for a specific patient are immediately preceded by the patient entry (p1,p1s1,p1s2,p1s3,p2,p2s1,p3,p4,p4s1,p4s2,...)
       else if (recordMap.get("redcap_repeat_instrument").equals("seizures")) {
         TreeItem<Map<String, String>> seizureItem = new TreeItem<>(recordMap);
         root.getChildren().get(root.getChildren().size()-1).getChildren().add(seizureItem);
@@ -219,6 +222,8 @@ public class RedcapToolGuiController {
   /* Button Handler */
 
   @FXML void handleExpandAllAction(ActionEvent event) {
+    if (dataTreeTable.getRoot() == null)
+      return;
     currentAllExpanded = !currentAllExpanded;
     for (TreeItem<Map<String, String>> row : dataTreeTable.getRoot().getChildren()) {
       row.setExpanded(currentAllExpanded);

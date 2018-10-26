@@ -49,12 +49,7 @@
             <AnchorPane prefHeight="200.0" prefWidth="200.0">
                <children>
           <Label alignment="CENTER" font="$x1" layoutX="14.0" layoutY="14.0" style="&#10;" text="Data" textAlignment="CENTER" textFill="$x2" wrapText="false" />
-                  <TreeTableView fx:id="dataTreeTable" layoutX="5.0" layoutY="50.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="50.0">
-                    <columns>
-                      <TreeTableColumn prefWidth="75.0" text="C1" />
-                      <TreeTableColumn prefWidth="75.0" text="C2" />
-                    </columns>
-                  </TreeTableView>
+                  <TreeTableView fx:id="dataTreeTable" layoutX="5.0" layoutY="50.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="50.0" />
                   <Button layoutX="1262.0" layoutY="20.0" mnemonicParsing="false" onAction="#handleExpandAllAction" text="Expand/Collapse All" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="20.0" />
                </children>
             </AnchorPane>

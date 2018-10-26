@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="javafx" name="epilepsy-redcap-tool">
-    <output-path>$PROJECT_DIR$/out/artifacts/epilepsy_redcap_tool</output-path>
+    <output-path>$PROJECT_DIR$/target/artifacts/epilepsy_redcap_tool</output-path>
     <properties id="javafx-properties">
       <options>
         <option name="appClass" value="epilepsy.RedcapToolMain" />
@@ -14,7 +14,6 @@
     <root id="root">
       <element id="archive" name="epilepsy_redcap_tool.jar">
         <element id="module-output" name="epilepsy-redcap-tool" />
-        <element id="library" level="project" name="com.opencsv:opencsv:4.3.2" />
       </element>
     </root>
   </artifact>
