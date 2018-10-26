@@ -43,3 +43,6 @@ buildNumber.properties
 **/.idea/usage.statistics.xml
 **/.idea/libraries/Maven*
 /out/
+
+# Other
+src/main/resources/DATA.csv
