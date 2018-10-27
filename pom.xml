@@ -7,7 +7,7 @@
     <groupId>org.radarcns</groupId>
     <artifactId>epilepsy-redcap-tool</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0-alpha-SNAPSHOT</version>
+    <version>0.1.0-alpha</version>
     <name>Epilepsy REDCap Tool</name>
 
     <properties>
