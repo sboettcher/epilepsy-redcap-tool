@@ -20,10 +20,7 @@ import javafx.util.Callback;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static epilepsy.util.Statics.*;
@@ -31,6 +28,8 @@ import static epilepsy.util.Statics.*;
 public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
   static {LOGGER.setLevel(loglvl);}
+
+  private final Properties mProperties = new Properties();
 
   @FXML private Label leftStatus;
   @FXML private Label rightStatus;
@@ -58,6 +57,11 @@ public class RedcapToolGuiController {
 
 
   public RedcapToolGuiController() {
+    try {
+      mProperties.load(getClass().getResourceAsStream("/project.properties"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     ddEntries = new ArrayList<>();
     dataEntries = new ArrayList<>();
   }
@@ -270,11 +274,12 @@ public class RedcapToolGuiController {
 
   @FXML void handleAboutAction(ActionEvent event) {
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
-    alert.setTitle("About Epilepsy REDCap Tool");
-    alert.setHeaderText("Epilepsy REDCap Tool");
+    alert.setTitle("About " + mProperties.getProperty("name"));
+    alert.setHeaderText(mProperties.getProperty("name"));
 
     VBox vb = new VBox();
-    Label lbl = new Label(String.format("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\nJava: %s\nJavaFX: %s\n\nLog Level: %s\nBuild: %s@%s", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion(), loglvl, buildversion, buildtime));
+    Label lbl = new Label(String.format("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\nJava: %s\nJavaFX: %s\n\nLog Level: %s\nBuild: %s @ %s",
+        Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion(), loglvl, mProperties.getProperty("buildversion"), mProperties.getProperty("buildstamp")));
     Hyperlink link1 = new Hyperlink("https://radar-cns.org");
     Hyperlink link2 = new Hyperlink("https://radar-base.org");
     vb.getChildren().addAll( link1, link2, lbl );
@@ -287,8 +292,6 @@ public class RedcapToolGuiController {
     } );
 
     alert.getDialogPane().contentProperty().set( vb );
-    alert.setContentText(String.format("RADAR-CNS\n\nJava: %s\nJavaFX: %s\nradar-cns.org\nradar-base.org", Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion()));
-
     alert.setGraphic(new ImageView(new Image(getClass().getResourceAsStream("/radarcns-logo.png"), 150, 100, true, true)));
 
     alert.showAndWait();
@@ -315,4 +318,5 @@ public class RedcapToolGuiController {
       alert.showAndWait();
     }
   }
+
 }

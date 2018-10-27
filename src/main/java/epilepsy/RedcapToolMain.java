@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -18,6 +19,8 @@ import static epilepsy.util.Statics.loglvl;
 public class RedcapToolMain extends Application {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolMain.class.getName() );
   static {LOGGER.setLevel(loglvl);}
+
+  private final Properties mProperties = new Properties();
 
   private RedcapToolGuiController mUIController;
 
@@ -37,11 +40,13 @@ public class RedcapToolMain extends Application {
 
   @Override
   public void start(Stage primaryStage) throws Exception {
+    mProperties.load(getClass().getResourceAsStream("/project.properties"));
+
     FXMLLoader tool_ui_loader = new FXMLLoader(getClass().getResource("/redcap_tool_gui.fxml"));
     Parent tool_ui_root = tool_ui_loader.load();
     mUIController = tool_ui_loader.getController();
 
-    primaryStage.setTitle("Epilepsy REDCap Tool");
+    primaryStage.setTitle(mProperties.getProperty("name") + " | " + mProperties.getProperty("buildversion"));
     primaryStage.setMaximized(true);
     primaryStage.setScene(new Scene(tool_ui_root, 1920, 1080));
     primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/radarcns-logo-small-bg.png")));
