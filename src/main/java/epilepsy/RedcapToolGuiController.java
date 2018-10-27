@@ -36,21 +36,21 @@ public class RedcapToolGuiController {
   @FXML private TreeView dictionaryTree;
   @FXML private TreeTableView<Map<String, String>> dataTreeTable;
 
-  private ArrayList<DictionaryEntry> ddEntries;
-  private ArrayList<HashMap<String, String>> dataEntries;
+  private DictionaryLoader mDictionary;
+  private DataLoader mData;
 
-  private boolean currentAllExpanded = false;
-  private static final String defaultSortColumn = "patient_code";
-  private static final ArrayList<String> defaultDataColumns;
+  private boolean mAllExpanded = false;
+  private static final String mDefaultSortColumn = "patient_code";
+  private static final ArrayList<String> mDefaultDataColumns;
   static {
-    defaultDataColumns = new ArrayList<>();
-    //defaultDataColumns.add("record_id");
-    defaultDataColumns.add("patient_code");
-    defaultDataColumns.add("start_date");
-    defaultDataColumns.add("recording_end_date");
-    defaultDataColumns.add("seizure_recorded");
-    defaultDataColumns.add("rep_seizure_type");
-    defaultDataColumns.add("rep_seizure_num");
+    mDefaultDataColumns = new ArrayList<>();
+    //mDefaultDataColumns.add("record_id");
+    mDefaultDataColumns.add("patient_code");
+    mDefaultDataColumns.add("start_date");
+    mDefaultDataColumns.add("recording_end_date");
+    mDefaultDataColumns.add("seizure_recorded");
+    mDefaultDataColumns.add("rep_seizure_type");
+    mDefaultDataColumns.add("rep_seizure_num");
   }
 
 
@@ -60,8 +60,6 @@ public class RedcapToolGuiController {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    ddEntries = new ArrayList<>();
-    dataEntries = new ArrayList<>();
   }
 
   @FXML public void initialize() {
@@ -71,21 +69,18 @@ public class RedcapToolGuiController {
     dataTreeTable.setPlaceholder(new Label("No data loaded.\n\nTo begin:\n1. Load a Data Dictionary if the default is out-of-date.\n2. Load data from an exported CSV file.\n3. Select columns in the top right (\"+\")."));
 
     try {
-      ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromResource("/DICT.csv");
-      setDictionary(ddEntries);
+      mDictionary = new DictionaryLoader("/DICT.csv");
+      setDictionary();
     } catch (NullPointerException ex) {
       LOGGER.warning("Error loading dictionary from resource file during initialization.");
     }
 
     try {
-      dataEntries = DataLoader.readFromResource("/DATA.csv");
-      setData(ddEntries, dataEntries);
+      mData = new DataLoader("/DATA.csv");
+      setData();
     } catch (IOException | NullPointerException ex) {
       LOGGER.warning("Error loading data from resource file during initialization.");
     }
-
-    leftStatus.setText(String.format("Dictionary Size: %d", ddEntries.size()));
-    leftStatus.setText(String.format("Data Size: %d", dataEntries.size()));
 
     LOGGER.info("Tool GUI initialized");
   }
@@ -93,27 +88,16 @@ public class RedcapToolGuiController {
 
   /* Dictionary Handler */
 
-  private void setDictionary(ArrayList<DictionaryEntry> entries) {
+  private void setDictionary() {
     // single toplevel root item
     TreeItem<String> rootItem = new TreeItem<>("Data Dictionary");
     rootItem.setExpanded(true);
     dictionaryTree.setRoot(rootItem);
 
-    if (entries == null || entries.size() < 1) return;
-
-    // sort dictionary entries into instruments map
-    ArrayList<String> instrumentOrder = new ArrayList<>();
-    HashMap<String, ArrayList<DictionaryEntry>> instruments = new HashMap<>();
-    for (DictionaryEntry de : entries) {
-      if (!instruments.containsKey(de.getFormName())) {
-        instruments.put(de.getFormName(), new ArrayList<>());
-        instrumentOrder.add(de.getFormName());
-      }
-      instruments.get(de.getFormName()).add(de);
-    }
+    if (mDictionary.getEntries() == null || mDictionary.getEntries().size() < 1) return;
 
     // create instrument nodes and add children
-    for (String instrument : instrumentOrder) {
+    for (String instrument : mDictionary.getInstrumentOrder()) {
       TreeItem<String> instrumentRoot = new TreeItem<>(instrument);
       int instrumentIndex = rootItem.getChildren().indexOf(instrumentRoot);
       if (instrumentIndex >= 0) {
@@ -121,21 +105,21 @@ public class RedcapToolGuiController {
       }
 
       instrumentRoot.getChildren().clear();
-      for (DictionaryEntry de : instruments.get(instrument)) {
+      for (DictionaryEntry de : mDictionary.getInstruments().get(instrument)) {
         instrumentRoot.getChildren().add(new TreeItem<>(de.getFieldName()));
       }
 
       rootItem.getChildren().add(instrumentRoot);
     }
 
-    rightStatus.setText(String.format("Dictionary Size: %d", entries.size()));
+    rightStatus.setText(String.format("Dictionary Size: %d", mDictionary.getEntries().size()));
   }
 
 
   /* Data Handler */
 
-  private void setData(ArrayList<DictionaryEntry> dictionary, ArrayList<HashMap<String, String>> data) {
-    if (dictionary.isEmpty() || data.isEmpty()) {
+  private void setData() {
+    if (mDictionary.getEntries().isEmpty() || mData.getData().isEmpty()) {
       LOGGER.warning("Empty dictionary or data.");
       return;
     }
@@ -149,7 +133,7 @@ public class RedcapToolGuiController {
     dataTreeTable.setSortMode(TreeSortMode.ONLY_FIRST_LEVEL);
 
     // add patient entries to root
-    for (HashMap<String, String> recordMap : data) {
+    for (HashMap<String, String> recordMap : mData.getData()) {
       if (!recordMap.get("patient_code").equals("")) {
         root.getChildren().add(new TreeItem<>(recordMap));
       }
@@ -163,7 +147,7 @@ public class RedcapToolGuiController {
 
     // create columns
     ArrayList<TreeTableColumn<Map<String, String>, String>> columns = new ArrayList<>();
-    for (DictionaryEntry dictionaryColumn : dictionary) {
+    for (DictionaryEntry dictionaryColumn : mDictionary.getEntries()) {
       TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel().equals("") ? dictionaryColumn.getFieldName() : dictionaryColumn.getFieldLabel());
       if (dictionaryColumn.getFieldType().equals("checkbox")) {
         nextColumn.setCellValueFactory(cellData -> {
@@ -204,9 +188,9 @@ public class RedcapToolGuiController {
             (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
         );
       }
-      if (!defaultDataColumns.contains(dictionaryColumn.getFieldName()))
+      if (!mDefaultDataColumns.contains(dictionaryColumn.getFieldName()))
         nextColumn.setVisible(false);
-      if (dictionaryColumn.getFieldName().equals(defaultSortColumn)) {
+      if (dictionaryColumn.getFieldName().equals(mDefaultSortColumn)) {
         nextColumn.setSortType(TreeTableColumn.SortType.ASCENDING);
         dataTreeTable.getSortOrder().add(nextColumn);
       }
@@ -216,7 +200,7 @@ public class RedcapToolGuiController {
     dataTreeTable.getColumns().setAll(columns);
     dataTreeTable.sort();
 
-    leftStatus.setText(String.format("Data Size: %d", data.size()));
+    leftStatus.setText(String.format("Data Size: %d", mData.getData().size()));
   }
 
 
@@ -226,9 +210,9 @@ public class RedcapToolGuiController {
   @FXML void handleExpandAllAction(ActionEvent event) {
     if (dataTreeTable.getRoot() == null)
       return;
-    currentAllExpanded = !currentAllExpanded;
+    mAllExpanded = !mAllExpanded;
     for (TreeItem<Map<String, String>> row : dataTreeTable.getRoot().getChildren()) {
-      row.setExpanded(currentAllExpanded);
+      row.setExpanded(mAllExpanded);
     }
   }
 
@@ -241,8 +225,8 @@ public class RedcapToolGuiController {
     fileChooser.setTitle("Open Data Dictionary File");
     File dictfile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
     try {
-      ddEntries = (ArrayList<DictionaryEntry>) DictionaryLoader.readFromFile(dictfile);
-      setDictionary(ddEntries);
+      mDictionary = new DictionaryLoader(dictfile);
+      setDictionary();
     } catch (FileNotFoundException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
@@ -255,8 +239,8 @@ public class RedcapToolGuiController {
     fileChooser.setTitle("Open REDCap Data File");
     File datafile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
     try {
-      dataEntries = DataLoader.readFromFile(datafile);
-      setData(ddEntries, dataEntries);
+      mData = new DataLoader(datafile);
+      setData();
     } catch (IOException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
