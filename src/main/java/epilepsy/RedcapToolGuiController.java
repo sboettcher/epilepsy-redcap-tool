@@ -6,7 +6,6 @@ import epilepsy.redcap.DictionaryLoader;
 import epilepsy.util.ExceptionAlert;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -15,7 +14,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.util.Callback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
-import static epilepsy.util.Statics.*;
+import static epilepsy.util.Statics.loglvl;
 
 public class RedcapToolGuiController {
   private static final Logger LOGGER = Logger.getLogger( RedcapToolGuiController.class.getName() );
@@ -248,7 +246,6 @@ public class RedcapToolGuiController {
     } catch (FileNotFoundException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
-      alert.setContentText("Exception while trying to open a dictionary file at\n" + dictfile.getPath());
       alert.showAndWait();
     }
   }
@@ -263,7 +260,6 @@ public class RedcapToolGuiController {
     } catch (IOException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
-      alert.setContentText("Exception while trying to open a data file at\n" + datafile.getPath());
       alert.showAndWait();
     }
   }
@@ -297,24 +293,30 @@ public class RedcapToolGuiController {
     alert.showAndWait();
   }
 
+  @FXML void handleKCLLinkAction(ActionEvent event) {
+    openBrowser("https://radar-redcap.rosalind.kcl.ac.uk/redcap/redcap_v7.4.10/DataEntry/record_status_dashboard.php?pid=15");
+  }
+  @FXML void handleUKLFRLinkAction(ActionEvent event) {
+    openBrowser("https://stuz-redcap.ukl.uni-freiburg.de/redcap_v8.5.5/DataEntry/record_status_dashboard.php?pid=36");
+  }
+
 
   /* Miscellaneous */
   private void openBrowser(String url) {
     LOGGER.info("Opening webbrowser at " + url);
     try {
       if (System.getProperty("os.name").toLowerCase().contains("win")) {
-        // TODO: open correct process for windows
-        throw new UnsupportedOperationException("Trying to open browser in windows, not implemented yet.");
+        Runtime rt = Runtime.getRuntime();
+        rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
       } else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-        // TODO: open correct process for mac
-        throw new UnsupportedOperationException("Trying to open browser on mac, not implemented yet.");
+        Runtime rt = Runtime.getRuntime();
+        rt.exec("open " + url);
       } else {
         new ProcessBuilder("x-www-browser", url).start();
       }
-    } catch (IOException | UnsupportedOperationException ex) {
+    } catch (IOException ex) {
       ex.printStackTrace();
       Alert alert = new ExceptionAlert(ex);
-      alert.setContentText("Exception while trying to open a webbrowser at\n" + url);
       alert.showAndWait();
     }
   }

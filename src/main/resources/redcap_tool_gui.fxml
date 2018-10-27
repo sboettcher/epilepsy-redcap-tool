@@ -1,24 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
-
 <VBox prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="epilepsy.RedcapToolGuiController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
         <Menu mnemonicParsing="false" text="File">
           <items>
-                  <MenuItem mnemonicParsing="false" onAction="#handleLoadDictAction" text="Load Dictionary" />
-                  <MenuItem mnemonicParsing="false" onAction="#handleLoadDataAction" text="Load Data" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" onAction="#handleLoadDictAction" text="Load Dictionary" />
+            <MenuItem mnemonicParsing="false" onAction="#handleLoadDataAction" text="Load Data" />
+            <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem disable="true" mnemonicParsing="false" text="Preferences…" />
             <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" onAction="#handleExitAction" text="Quit" />
@@ -26,6 +21,9 @@
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
+            <MenuItem mnemonicParsing="false" onAction="#handleKCLLinkAction" text="Browse to KCL REDCap" />
+            <MenuItem mnemonicParsing="false" onAction="#handleUKLFRLinkAction" text="Browse to UKLFR REDCap" />
+            <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" onAction="#handleAboutAction" text="About Epilepsy REDCap Tool" />
           </items>
         </Menu>

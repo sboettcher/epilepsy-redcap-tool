@@ -14,6 +14,7 @@ public class ExceptionAlert extends Alert {
     super(AlertType.ERROR);
     this.setTitle("Error!");
     this.setHeaderText("Sorry, something didn't work out as it should.");
+    this.setContentText(ex.toString());
     setException(ex);
   }
 
