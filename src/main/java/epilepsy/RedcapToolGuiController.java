@@ -31,8 +31,10 @@ public class RedcapToolGuiController {
 
   @FXML private Label leftStatus;
   @FXML private Label rightStatus;
-
   @FXML private HBox statusHBox;
+
+  @FXML private ListView extListView;
+  @FXML private TextArea extInfoText;
   @FXML private TreeView dictionaryTree;
   @FXML private TreeTableView<Map<String, String>> dataTreeTable;
 
@@ -51,6 +53,12 @@ public class RedcapToolGuiController {
     mDefaultDataColumns.add("seizure_recorded");
     mDefaultDataColumns.add("rep_seizure_type");
     mDefaultDataColumns.add("rep_seizure_num");
+  }
+
+  private static final HashMap<String,String> mExtractions;
+  static {
+    mExtractions = new HashMap<>();
+    mExtractions.put("all_pat", "All Patients with Seizures");
   }
 
 
