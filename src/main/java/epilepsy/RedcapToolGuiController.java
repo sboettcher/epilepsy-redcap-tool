@@ -125,19 +125,19 @@ public class RedcapToolGuiController {
     }
 
     // create single toplevel root item
-    final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("patient_code", "ROOT"));
+    final TreeItem<Map<String, String>> root = new TreeItem<>(Collections.singletonMap("record_id", "ROOT"));
     root.setExpanded(true);
     dataTreeTable.setRoot(root);
     dataTreeTable.setShowRoot(false);
     dataTreeTable.setTableMenuButtonVisible(true);
     dataTreeTable.setSortMode(TreeSortMode.ONLY_FIRST_LEVEL);
 
-    // add patient entries to root
+    // add patient nodes to root
     for (HashMap<String, String> recordMap : mData.getData()) {
       if (!recordMap.get("patient_code").equals("")) {
         root.getChildren().add(new TreeItem<>(recordMap));
       }
-      // add seizure entries to patients
+      // add seizure nodes to patients
       // TODO: currently assumes seizure entries for a specific patient are immediately preceded by the patient entry (p1,p1s1,p1s2,p1s3,p2,p2s1,p3,p4,p4s1,p4s2,...)
       else if (recordMap.get("redcap_repeat_instrument").equals("seizures")) {
         TreeItem<Map<String, String>> seizureItem = new TreeItem<>(recordMap);
@@ -149,6 +149,8 @@ public class RedcapToolGuiController {
     ArrayList<TreeTableColumn<Map<String, String>, String>> columns = new ArrayList<>();
     for (DictionaryEntry dictionaryColumn : mDictionary.getEntries()) {
       TreeTableColumn<Map<String, String>, String> nextColumn = new TreeTableColumn<>(dictionaryColumn.getFieldLabel().equals("") ? dictionaryColumn.getFieldName() : dictionaryColumn.getFieldLabel());
+
+      // checkbox field columns
       if (dictionaryColumn.getFieldType().equals("checkbox")) {
         nextColumn.setCellValueFactory(cellData -> {
           // get checked choice indices and collect labels
@@ -167,6 +169,8 @@ public class RedcapToolGuiController {
           else
             return new ReadOnlyStringWrapper(cellContent);
         });
+
+      // radio field columns
       } else if (dictionaryColumn.getFieldType().equals("radio")) {
         nextColumn.setCellValueFactory(cellData -> {
           String fieldValue = cellData.getValue().getValue().get(dictionaryColumn.getFieldName());
@@ -175,6 +179,8 @@ public class RedcapToolGuiController {
           else
             return new ReadOnlyStringWrapper(dictionaryColumn.getChoices().get(Integer.parseInt(fieldValue)));
         });
+
+      // yesno field columns
       } else if (dictionaryColumn.getFieldType().equals("yesno")) {
         nextColumn.setCellValueFactory(cellData -> {
           String fieldValue = cellData.getValue().getValue().get(dictionaryColumn.getFieldName());
@@ -183,17 +189,24 @@ public class RedcapToolGuiController {
           else
             return new ReadOnlyStringWrapper(fieldValue.equals("0") ? "no" : "yes");
         });
+
+      // all other columns
       } else {
         nextColumn.setCellValueFactory(
             (TreeTableColumn.CellDataFeatures<Map<String, String>, String> param) -> new ReadOnlyStringWrapper(param.getValue().getValue().get(dictionaryColumn.getFieldName()))
         );
       }
+
+      // hide all non-default columns
       if (!mDefaultDataColumns.contains(dictionaryColumn.getFieldName()))
         nextColumn.setVisible(false);
+
+      // set default sorting
       if (dictionaryColumn.getFieldName().equals(mDefaultSortColumn)) {
         nextColumn.setSortType(TreeTableColumn.SortType.ASCENDING);
         dataTreeTable.getSortOrder().add(nextColumn);
       }
+
       columns.add(nextColumn);
     }
 
@@ -224,6 +237,7 @@ public class RedcapToolGuiController {
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open Data Dictionary File");
     File dictfile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
+    if (dictfile == null) return;
     try {
       mDictionary = new DictionaryLoader(dictfile);
       setDictionary();
@@ -238,6 +252,7 @@ public class RedcapToolGuiController {
     FileChooser fileChooser = new FileChooser();
     fileChooser.setTitle("Open REDCap Data File");
     File datafile = fileChooser.showOpenDialog(statusHBox.getScene().getWindow());
+    if (datafile == null) return;
     try {
       mData = new DataLoader(datafile);
       setData();

@@ -3,6 +3,7 @@ package epilepsy.redcap;
 import com.opencsv.CSVReaderHeaderAware;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -19,7 +20,7 @@ public class DataLoader {
     mData = new ArrayList<>();
   }
 
-  public DataLoader(Reader reader) throws IOException {
+  public DataLoader(BufferedReader reader) throws IOException {
     this();
     mData = readData(reader);
   }
@@ -34,7 +35,11 @@ public class DataLoader {
 
 
 
-  public static ArrayList<HashMap<String, String>> readData(Reader reader) throws IOException {
+  public static ArrayList<HashMap<String, String>> readData(BufferedReader reader) throws IOException {
+    // check for BOM marker; will only appear as the first char sequence
+    reader.mark(4);
+    if ('\ufeff' != reader.read()) reader.reset(); // not the BOM marker, reset
+
     ArrayList<HashMap<String, String>> entries = new ArrayList<>();
     CSVReaderHeaderAware csvReader = new CSVReaderHeaderAware(reader);
     HashMap<String, String> next;
@@ -47,12 +52,12 @@ public class DataLoader {
 
   public static ArrayList<HashMap<String, String>> readFromFile(File file) throws IOException {
     LOGGER.fine("Reading data from file " + file.getPath());
-    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
     return readData(br);
   }
   public static ArrayList<HashMap<String, String>> readFromResource(String res) throws IOException, NullPointerException {
     LOGGER.fine("Reading data from resource " + res);
-    BufferedReader br = new BufferedReader(new InputStreamReader(DictionaryLoader.class.getResourceAsStream(res)));
+    BufferedReader br = new BufferedReader(new InputStreamReader(DictionaryLoader.class.getResourceAsStream(res), StandardCharsets.UTF_8));
     return readData(br);
   }
 
