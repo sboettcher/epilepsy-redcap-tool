@@ -13,6 +13,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -281,11 +283,26 @@ public class RedcapToolGuiController {
     alert.setHeaderText(mProperties.getProperty("name"));
 
     VBox vb = new VBox();
-    Label lbl = new Label(String.format("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\nJava: %s\nJavaFX: %s\n\nLog Level: %s\nBuild: %s @ %s",
-        Runtime.class.getPackage().getImplementationVersion(), com.sun.javafx.runtime.VersionInfo.getRuntimeVersion(), loglvl, mProperties.getProperty("buildversion"), mProperties.getProperty("buildstamp")));
+
+    TextFlow about = new TextFlow();
+    Text aboutintro = new Text("\nAs part of the european research programme RADAR-CNS\nWP4 - Epilepsy\n\n");
+    Text aboutjavaverl = new Text("Java: "); aboutjavaverl.setStyle("-fx-font-weight: bold");
+    Text aboutjavafxverl = new Text("\nJavaFX: "); aboutjavafxverl.setStyle("-fx-font-weight: bold");
+    Text aboutloglevell = new Text("\n\nLog Level: "); aboutloglevell.setStyle("-fx-font-weight: bold");
+    Text aboutbuildverl = new Text("\nBuild: "); aboutbuildverl.setStyle("-fx-font-weight: bold");
+    Text aboutbuildstampl = new Text("\nStamp: "); aboutbuildstampl.setStyle("-fx-font-weight: bold");
+
+    Text aboutjavaver = new Text(Runtime.class.getPackage().getImplementationVersion());
+    Text aboutjavafxver = new Text(com.sun.javafx.runtime.VersionInfo.getRuntimeVersion());
+    Text aboutloglevel = new Text(loglvl.toString());
+    Text aboutbuildver = new Text(mProperties.getProperty("buildversion"));
+    Text aboutbuildstamp = new Text(mProperties.getProperty("buildstamp"));
+
+    about.getChildren().addAll(aboutintro, aboutjavaverl, aboutjavaver, aboutjavafxverl, aboutjavafxver, aboutloglevell, aboutloglevel, aboutbuildverl, aboutbuildver, aboutbuildstampl, aboutbuildstamp);
+
     Hyperlink link1 = new Hyperlink("https://radar-cns.org");
     Hyperlink link2 = new Hyperlink("https://radar-base.org");
-    vb.getChildren().addAll( link1, link2, lbl );
+    vb.getChildren().addAll( link1, link2, about );
 
     link1.setOnAction( (evt) -> {
       openBrowser(link1.getText());
